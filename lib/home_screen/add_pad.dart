@@ -60,19 +60,6 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
 
     return Scaffold( 
       backgroundColor: backgroundColor, 
-      // appBar: AppBar(
-      //   backgroundColor: Colors.transparent,
-      //   elevation: 0,
-      //   leading: IconButton(
-      //     icon: const Icon(Icons.chevron_left, color: Colors.black, size: 30),
-      //     onPressed: () => Navigator.pop(context),
-      //   ),
-      //   title: const Text(
-      //     'Add New Pads',
-      //     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-      //   ),
-      //   centerTitle: true,
-      // ),
       appBar: AppBar(
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,

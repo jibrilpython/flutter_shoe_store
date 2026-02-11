@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// 1. Define the Data Model
+// Define the Data Model
 class ShoePad {
   final String id;
   final String title;
@@ -65,7 +65,7 @@ class FilterState {
   }
 }
 
-// 2. Define the Notifier to manage the list
+// Define the Notifier to manage the list
 class PadListNotifier extends Notifier<List<ShoePad>> {
   @override
   List<ShoePad> build() {
@@ -75,7 +75,7 @@ class PadListNotifier extends Notifier<List<ShoePad>> {
         id: '1',
         title: 'Boot High',
         size: '41',
-        measure: '240 mm BG',
+        measure: '240 mm',
         material: 'Beech',
         manufacturer: 'Heritage Craft',
       ),
@@ -83,7 +83,7 @@ class PadListNotifier extends Notifier<List<ShoePad>> {
         id: '2',
         title: 'Stiletto Elegant',
         size: '38',
-        measure: '220 mm BG',
+        measure: '220 mm',
         material: 'Aluminum',
         manufacturer: 'PrecisionLast',
         isFavorite: true,
@@ -92,7 +92,7 @@ class PadListNotifier extends Notifier<List<ShoePad>> {
         id: '3',
         title: 'Oxford Classic',
         size: '42',
-        measure: '245 mm BG',
+        measure: '245 mm',
         material: 'Beech',
         manufacturer: 'Springline',
       ),
@@ -110,6 +110,10 @@ class PadListNotifier extends Notifier<List<ShoePad>> {
       for (final pad in state)
         if (pad.id == id) pad.copyWith(isFavorite: !pad.isFavorite) else pad,
     ];
+  }
+
+  void deletePad(String id) {
+    state = state.where((pad) => pad.id != id).toList();
   }
 }
 

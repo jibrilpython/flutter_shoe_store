@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shoe_store/home_screen/filters.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shoe_store/home_screen/pad_details.dart';
 import 'package:shoe_store/providers/shoe_details_provider.dart';
 import 'package:shoe_store/home_screen/add_pad.dart';
 
@@ -24,6 +24,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  late TextEditingController _manufacturerController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controller with current state from provider
+    final currentState = ref.read(filterProvider);
+    _manufacturerController = TextEditingController(text: currentState.manufacturerSearch);
+  }
+
+  @override
+  void dispose() {
+    _manufacturerController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     const backgroundColor = Color(0xFFF9F6F1);
@@ -32,6 +48,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final allPads = ref.watch(padListProvider);
     final filters = ref.watch(filterProvider);
+    final filterNotifier = ref.read(filterProvider.notifier);
+    
     // const textSecondary = Color(0xFF70635D);
 
 
@@ -127,6 +145,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(width: 5),
                         Expanded(
                           child: TextField(
+                            // controller: _manufacturerController,
+                            // onChanged: (value) {
+                            //   // Update the global state as the user types
+                            //   filterNotifier.updateManufacturer(value);
+                            // },
+                            controller: _manufacturerController,
+                            onChanged: (value) {
+                              // Check if the entire input can be parsed as a number (int or double)
+                              if (value.isEmpty) {
+                                // Clear ALL filters when the field is emptied
+                                filterNotifier.updateManufacturer('');
+                                filterNotifier.updateMaterial('');
+                                filterNotifier.updateSize('');
+                              } else if (double.tryParse(value) != null) {
+                                // Numeric input → update only size filter
+                                filterNotifier.updateSize(value);
+                              } else {
+                                // Non‑numeric, non‑empty input → update both manufacturer and material
+                                filterNotifier.updateManufacturer(value);
+                                // filterNotifier.updateMaterial(value);
+                              }
+                            },
                             textAlignVertical: TextAlignVertical.center,
                             decoration: const InputDecoration(
                               isCollapsed: true,
@@ -197,6 +237,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: displayedPads.isEmpty
                   ? _buildEmptyState(primaryBrown, Color(0xFF70635D))
                   : _buildPadList(displayedPads, Color(0xFF70635D)),
+                  // : _buildPadList(context, ref, allPads),
             ),
 
             // Bottom Action Button
@@ -280,6 +321,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildPadList(List<ShoePad> pads, Color secondary) {
     return ListView.separated(
       itemCount: pads.length,
+      // itemCount: pads.itemCount,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final pad = pads[index];
@@ -305,10 +347,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2EEE7),
                   borderRadius: BorderRadius.circular(12),
+                  image: pad.hasPhoto
+                    ? const DecorationImage(
+                        image: AssetImage('assets/img/shoe1.png'),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
                 ),
-                child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D)),
-                
+                // child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D)),
+                child: !pad.hasPhoto
+                  ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D))
+                  : null,
               ),
+
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -316,28 +367,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text(pad.title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 22, color: Color(0xFF1D1D1D), fontFamily: 'SF Pro Display' )),
                     const SizedBox(height: 4),
-                    Text('${pad.size} EU  •  ${pad.measure}', style: TextStyle(color: secondary, fontSize: 16, fontWeight: FontWeight.w400, fontFamily: 'SF Pro Text')),
+                    Text('${pad.size} EU  •  ${pad.measure} BG', style: TextStyle(color: secondary, fontSize: 16, fontWeight: FontWeight.w400, fontFamily: 'SF Pro Text')),
                     Text('${pad.material}  •  ${pad.manufacturer}', style: TextStyle(color: secondary, fontSize: 12, fontWeight: FontWeight.w400, fontFamily: 'SF Pro Text')),
                   ],
                 ),
               ),
-
-              // Row(
-              //   mainAxisSize: MainAxisSize.min,
-              //   children: [
-              //     if (pad.isFavorite)
-              //       const Icon(Icons.favorite, color: Color(0xFFE57373), size: 20)
-              //     else
-              //       const SizedBox(width: 20),
-              //     const SizedBox(width: 12),
-              //     GestureDetector(
-              //       onTap: () {
-              //         // Logic for taking user to another page goes here
-              //       },
-              //       child: const Icon(Icons.chevron_right, color: Color(0xFF70635D)),
-              //     ),
-              //   ],
-              // ),
 
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -355,7 +389,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(width: 12),
                   GestureDetector(
                     onTap: () {
-                      // Navigation logic
+                      // Navigator.push(
+                      // context,
+                      // MaterialPageRoute(
+                      //   builder: (_) => PadDetailsScreen(pad: pad),
+                      // ),
+                      // );
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => PadDetailsScreen(pad: pad))
+                      );
                     },
                     child: const Icon(Icons.chevron_right, color: Color(0xFF70635D)),
                   ),
@@ -367,4 +409,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
     );
   }
+
+
+
+
+  // Widget _buildPadList(BuildContext context, WidgetRef ref, List<ShoePad> pads) {
+  //   return ListView.builder(
+  //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //     itemCount: pads.length, // Note: You'd use pads.length usually, but following the flow
+  //     itemBuilder: (context, index) {
+  //       final pad = pads[index];
+  //       return Container(
+  //         margin: const EdgeInsets.only(bottom: 12),
+  //         decoration: BoxDecoration(
+  //           color: Colors.white,
+  //           borderRadius: BorderRadius.circular(16),
+  //           boxShadow: [
+  //             BoxShadow(
+  //               color: Colors.black.withOpacity(0.03),
+  //               blurRadius: 10,
+  //               offset: const Offset(0, 4),
+  //             ),
+  //           ],
+  //         ),
+  //         child: ListTile(
+  //           contentPadding: const EdgeInsets.all(12),
+  //           leading: Container(
+  //             width: 60,
+  //             height: 60,
+  //             decoration: BoxDecoration(
+  //               color: const Color(0xFFF2EEE7),
+  //               borderRadius: BorderRadius.circular(12),
+  //               image: pad.hasPhoto
+  //                   ? const DecorationImage(
+  //                       image: AssetImage('assets/img/shoe1.png'),
+  //                       fit: BoxFit.cover,
+  //                     )
+  //                   : null,
+  //             ),
+  //             child: !pad.hasPhoto
+  //                 ? const Icon(Icons.image_outlined, color: Colors.black12)
+  //                 : null,
+  //           ),
+  //           title: Text(
+  //             pad.title,
+  //             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+  //           ),
+  //           subtitle: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text('${pad.size} EU • ${pad.material}'),
+  //               Text(pad.measure, style: const TextStyle(color: Colors.black38, fontSize: 12)),
+  //             ],
+  //           ),
+  //           trailing: Row(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               IconButton(
+  //                 icon: Icon(
+  //                   pad.isFavorite ? Icons.favorite : Icons.favorite_border,
+  //                   color: pad.isFavorite ? Colors.red : Colors.black26,
+  //                 ),
+  //                 onPressed: () => ref.read(padListProvider.notifier).toggleFavorite(pad.id),
+  //               ),
+  //               IconButton(
+  //                 icon: const Icon(Icons.chevron_right, color: Colors.black26),
+  //                 onPressed: () {
+  //                   // Navigate to details screen
+  //                   Navigator.push(
+  //                     context,
+  //                     MaterialPageRoute(
+  //                       builder: (_) => PadDetailsScreen(pad: pad),
+  //                     ),
+  //                   );
+  //                 },
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 }
