@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:shoe_store/home_screen/filters.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       
       // 5. Photo filter: Only filter if the switch is ON
-      if (filters.withPhotoOnly && !pad.hasPhoto) return false;
+      if (filters.withPhotoOnly && (pad.imagePath == null || pad.imagePath!.isEmpty)) return false;
 
       return true;
     }).toList();
@@ -236,7 +238,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Expanded(
               child: displayedPads.isEmpty
                   ? _buildEmptyState(primaryBrown, Color(0xFF70635D))
-                  : _buildPadList(displayedPads, Color(0xFF70635D)),
+                  : _buildPadList(displayedPads, Color(0xFF70635D))
+                  // : GestureDetector(
+                  //   onTap: () {
+                  //     // Navigator.push(
+                  //     // context,
+                  //     // MaterialPageRoute(
+                  //     //   builder: (_) => PadDetailsScreen(pad: pad),
+                  //     // ),
+                  //     // );
+                  //     Navigator.of(context).push(
+                  //       MaterialPageRoute(builder: (_) => PadDetailsScreen(pad: pad))
+                  //     );
+                  //   },
+                  //   child: _buildPadList(displayedPads, Color(0xFF70635D)),
+                  // ),
                   // : _buildPadList(context, ref, allPads),
             ),
 
@@ -325,6 +341,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final pad = pads[index];
+        final bool hasImage = pad.imagePath != null && pad.imagePath!.isNotEmpty;
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -339,156 +356,91 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ],
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 74,
-                height: 74,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2EEE7),
-                  borderRadius: BorderRadius.circular(12),
-                  image: pad.hasPhoto
-                    ? const DecorationImage(
-                        image: AssetImage('assets/img/shoe1.png'),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PadDetailsScreen(pad: pad),
                 ),
-                // child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D)),
-                child: !pad.hasPhoto
-                  ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D))
-                  : null,
-              ),
+              );
+            },
+            child: Row(
+              children: [
+                Container(
+                  width: 74,
+                  height: 74,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2EEE7),
+                    borderRadius: BorderRadius.circular(12),
+                    // image: pad.hasPhoto
+                    //   ? const DecorationImage(
+                    //       image: AssetImage('assets/img/shoe1.png'),
+                    //       fit: BoxFit.cover,
+                    //     )
+                    //   : null,
+                  ),
+                  // child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D)),
+                  // child: !pad.hasPhoto
+                  //   ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D))
+                  //   : null,
 
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: hasImage
+                      ? Image.file(
+                          File(pad.imagePath!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => 
+                            const Icon(Icons.broken_image_outlined, color: Colors.black12),
+                        )
+                      : const Icon(Icons.camera_alt_rounded, color: Color(0xFF70635D)),
+                ),
+                ),
+
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(pad.title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 22, color: Color(0xFF1D1D1D), fontFamily: 'SF Pro Display' )),
+                      const SizedBox(height: 4),
+                      Text('${pad.size} EU  •  ${pad.measure} BG', style: TextStyle(color: secondary, fontSize: 16, fontWeight: FontWeight.w400, fontFamily: 'SF Pro Text')),
+                      Text('${pad.material}  •  ${pad.manufacturer}', style: TextStyle(color: secondary, fontSize: 12, fontWeight: FontWeight.w400, fontFamily: 'SF Pro Text')),
+                    ],
+                  ),
+                ),
+
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(pad.title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 22, color: Color(0xFF1D1D1D), fontFamily: 'SF Pro Display' )),
-                    const SizedBox(height: 4),
-                    Text('${pad.size} EU  •  ${pad.measure} BG', style: TextStyle(color: secondary, fontSize: 16, fontWeight: FontWeight.w400, fontFamily: 'SF Pro Text')),
-                    Text('${pad.material}  •  ${pad.manufacturer}', style: TextStyle(color: secondary, fontSize: 12, fontWeight: FontWeight.w400, fontFamily: 'SF Pro Text')),
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(padListProvider.notifier).toggleFavorite(pad.id);
+                      },
+                      child: Icon(
+                        pad.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: pad.isFavorite ? const Color(0xFFE57373) : Colors.grey,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Icon(Icons.chevron_right, color: Color(0xFF70635D))
+                    // GestureDetector(
+                    //   onTap: () {
+                    //     Navigator.of(context).push(
+                    //       MaterialPageRoute(builder: (_) => PadDetailsScreen(pad: pad))
+                    //     );
+                    //   },
+                    //   child: const Icon(Icons.chevron_right, color: Color(0xFF70635D)),
+                    // ),
                   ],
                 ),
-              ),
-
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(padListProvider.notifier).toggleFavorite(pad.id);
-                    },
-                    child: Icon(
-                      pad.isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: pad.isFavorite ? const Color(0xFFE57373) : Colors.grey,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      // Navigator.push(
-                      // context,
-                      // MaterialPageRoute(
-                      //   builder: (_) => PadDetailsScreen(pad: pad),
-                      // ),
-                      // );
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => PadDetailsScreen(pad: pad))
-                      );
-                    },
-                    child: const Icon(Icons.chevron_right, color: Color(0xFF70635D)),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
-
-
-
-
-  // Widget _buildPadList(BuildContext context, WidgetRef ref, List<ShoePad> pads) {
-  //   return ListView.builder(
-  //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  //     itemCount: pads.length, // Note: You'd use pads.length usually, but following the flow
-  //     itemBuilder: (context, index) {
-  //       final pad = pads[index];
-  //       return Container(
-  //         margin: const EdgeInsets.only(bottom: 12),
-  //         decoration: BoxDecoration(
-  //           color: Colors.white,
-  //           borderRadius: BorderRadius.circular(16),
-  //           boxShadow: [
-  //             BoxShadow(
-  //               color: Colors.black.withOpacity(0.03),
-  //               blurRadius: 10,
-  //               offset: const Offset(0, 4),
-  //             ),
-  //           ],
-  //         ),
-  //         child: ListTile(
-  //           contentPadding: const EdgeInsets.all(12),
-  //           leading: Container(
-  //             width: 60,
-  //             height: 60,
-  //             decoration: BoxDecoration(
-  //               color: const Color(0xFFF2EEE7),
-  //               borderRadius: BorderRadius.circular(12),
-  //               image: pad.hasPhoto
-  //                   ? const DecorationImage(
-  //                       image: AssetImage('assets/img/shoe1.png'),
-  //                       fit: BoxFit.cover,
-  //                     )
-  //                   : null,
-  //             ),
-  //             child: !pad.hasPhoto
-  //                 ? const Icon(Icons.image_outlined, color: Colors.black12)
-  //                 : null,
-  //           ),
-  //           title: Text(
-  //             pad.title,
-  //             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-  //           ),
-  //           subtitle: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text('${pad.size} EU • ${pad.material}'),
-  //               Text(pad.measure, style: const TextStyle(color: Colors.black38, fontSize: 12)),
-  //             ],
-  //           ),
-  //           trailing: Row(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               IconButton(
-  //                 icon: Icon(
-  //                   pad.isFavorite ? Icons.favorite : Icons.favorite_border,
-  //                   color: pad.isFavorite ? Colors.red : Colors.black26,
-  //                 ),
-  //                 onPressed: () => ref.read(padListProvider.notifier).toggleFavorite(pad.id),
-  //               ),
-  //               IconButton(
-  //                 icon: const Icon(Icons.chevron_right, color: Colors.black26),
-  //                 onPressed: () {
-  //                   // Navigate to details screen
-  //                   Navigator.push(
-  //                     context,
-  //                     MaterialPageRoute(
-  //                       builder: (_) => PadDetailsScreen(pad: pad),
-  //                     ),
-  //                   );
-  //                 },
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 }

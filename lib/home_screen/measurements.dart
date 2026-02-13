@@ -7,7 +7,7 @@ class KeyMeasurementsScreen extends ConsumerStatefulWidget {
   final String manufacturer;
   final String size;
   final String material;
-  final bool hasPhoto;
+  final String? imagePath;
 
   const KeyMeasurementsScreen({
     super.key,
@@ -15,7 +15,7 @@ class KeyMeasurementsScreen extends ConsumerStatefulWidget {
     required this.manufacturer,
     required this.size,
     required this.material,
-    required this.hasPhoto,
+    this.imagePath,
   });
 
   
@@ -78,11 +78,19 @@ class _KeyMeasurementsScreenState extends ConsumerState<KeyMeasurementsScreen> {
                           material: widget.material,
                           manufacturer: widget.manufacturer,
                           isFavorite: false,
-                          hasPhoto: widget.hasPhoto,
+                          // hasPhoto: widget.hasPhoto,
+                          imagePath: widget.imagePath, // Saving the actual path
+                          ballGirth: _ballGirthController.text.trim(),
+                          instepGirth: _instepGirthController.text.trim(),
+                          heelHeight: _heelHeightController.text.trim(),
+                          notes: _notesController.text.trim(),
                         );
 
                         // 2. SAVE TO THE PROVIDER
                         ref.read(padListProvider.notifier).addPad(newPad);
+
+                        // CLEAR IMAGE PICKER STATE
+                        ref.read(imagePickerProvider).clearImage();
 
                         // 3. GO BACK TO HOME
                         Navigator.pop(context); // Close dialog
@@ -117,20 +125,6 @@ class _KeyMeasurementsScreenState extends ConsumerState<KeyMeasurementsScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      // appBar: AppBar(
-      //   backgroundColor: Colors.transparent,
-      //   elevation: 0,
-      //   leading: IconButton(
-      //     icon: const Icon(Icons.chevron_left, color: Colors.black, size: 30),
-      //     onPressed: () => Navigator.pop(context),
-      //   ),
-      //   title: const Text(
-      //     'Add New Pads',
-      //     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-      //   ),
-      //   centerTitle: true,
-      // ),
-
       appBar: AppBar(
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,

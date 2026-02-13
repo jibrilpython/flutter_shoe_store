@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shoe_store/home_screen/measurements.dart';
-// import 'package:shoe_store/providers/shoe_details_provider.dart';
-// import 'providers.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shoe_store/providers/shoe_details_provider.dart';
 
 // Enums for structured data
 enum PadMaterial { beech, maple, aluminum, plastic, other }
@@ -32,7 +33,7 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
   
   String _selectedSize = '35';
   PadMaterial _selectedMaterial = PadMaterial.beech;
-  bool _hasPhoto = false; // Simulating photo attachment for this demo
+  // bool _hasPhoto = false; 
 
   final List<String> _sizes = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
 
@@ -43,12 +44,42 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
     super.dispose();
   }
 
-  void _handlePickPhoto() {
-    // In a real app, you would use image_picker here.
-    // For this simulation, we toggle the photo state to show UI changes.
-    setState(() {
-      _hasPhoto = !_hasPhoto;
-    });
+  // void _handlePickPhoto() {
+  //   // In a real app, you would use image_picker here.
+  //   // For this simulation, we toggle the photo state to show UI changes.
+  //   setState(() {
+  //     _hasPhoto = !_hasPhoto;
+  //   });
+  // }
+
+  void _showImageSourceActionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take a Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                ref.read(imagePickerProvider).pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                ref.read(imagePickerProvider).pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -57,6 +88,8 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
     const primaryBrown = Color(0xFF6D523B);
     // const textSecondary = Color(0xFF8C7A6B);
     const fieldBg = Color(0xFFF3EFE9);
+    final imageState = ref.watch(imagePickerProvider);
+
 
     return Scaffold( 
       backgroundColor: backgroundColor, 
@@ -64,12 +97,14 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
         centerTitle: true,
+        
         // toolbarHeight: 56,
         flexibleSpace: SafeArea(
           child: Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: EdgeInsets.only(bottom: 11),
+              
               child: const Text(
                 'Add New Pads',
                 style: TextStyle(
@@ -78,6 +113,7 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
                   fontSize: 22,
                 ),
               ),
+              
             ),
           ),
         ),
@@ -96,7 +132,7 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
           children: [
             // Photo Section
             GestureDetector(
-              onTap: _handlePickPhoto,
+              onTap: () => _showImageSourceActionSheet(context),
               child: Container(
                 width: double.infinity,
                 height: 156,
@@ -111,24 +147,42 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
                       offset: const Offset(0, 2),
                     ),
                   ],
-                  image: _hasPhoto 
-                    ? const DecorationImage(
-                        image: AssetImage('assets/img/shoe1.png'), // Mocking the saved photo
-                        fit: BoxFit.cover,
-                      )
-                    : null,
+                  // image: _hasPhoto 
+                  //   ? const DecorationImage(
+                  //       image: AssetImage('assets/img/shoe1.png'), // Mocking the saved photo
+                  //       fit: BoxFit.cover,
+                  //     )
+                  //   : null,
                   // border: Border.all(color: Colors.black.withOpacity(0.05)),
                 ),
-                child: !_hasPhoto 
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.camera_alt, size: 42, color: Color(0xFF70635D)),
-                        const SizedBox(height: 4),
-                        const Text('Add photo', style: TextStyle(color: Color(0xFF70635D))),
-                      ],
-                    )
-                  : null,
+                
+                // child: !_hasPhoto 
+                //   ? Column(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         Icon(Icons.camera_alt, size: 42, color: Color(0xFF70635D)),
+                //         const SizedBox(height: 4),
+                //         const Text('Add photo', style: TextStyle(color: Color(0xFF70635D))),
+                //       ],
+                //     )
+                //   : null,
+                child: imageState.selectedImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                File(imageState.selectedImage!.path),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                            )
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.camera_alt, size: 42, color: Color(0xFF70635D)),
+                                SizedBox(height: 4),
+                                Text('Add photo', style: TextStyle(color: Color(0xFF70635D))),
+                              ],
+                            ),
               ),
             ),
             const SizedBox(height: 16),
@@ -224,7 +278,8 @@ class _AddPadScreenState extends ConsumerState<AddPadScreen> {
                   manufacturer: _manufacturerController.text.isEmpty ? "Unknown" : _manufacturerController.text,
                   size: _selectedSize,
                   material: _selectedMaterial.name,
-                  hasPhoto: _hasPhoto,
+                  // hasPhoto: _hasPhoto,
+                  imagePath: imageState.selectedImage?.path,
                   )
                 ),
               );

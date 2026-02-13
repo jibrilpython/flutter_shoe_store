@@ -25,8 +25,8 @@ class OnboardingScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Column(
+      body:
+        Column(
           children: [
             // Top Image Section
             Expanded(
@@ -35,10 +35,10 @@ class OnboardingScreen extends StatelessWidget {
                 width: double.infinity,
                 // margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
+                  // borderRadius: BorderRadius.only(
+                  //   topLeft: Radius.circular(24),
+                  //   topRight: Radius.circular(24),
+                  // ),
                   image: const DecorationImage(
                     image: AssetImage('assets/img/shoe1.png'),
                     fit: BoxFit.cover,
@@ -104,7 +104,6 @@ class OnboardingScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

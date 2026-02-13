@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shoe_store/home_screen/bottom_list.dart';
 import 'package:shoe_store/providers/shoe_details_provider.dart';
@@ -139,7 +140,10 @@ class PadDetailsScreen extends ConsumerWidget {
     // const primaryBrown = Color(0xFF6D523B);
     // const labelColor = Color(0xFF8C7A6B);
     final currentPads = ref.watch(padListProvider);
-    final currentPad = currentPads.firstWhere((p) => p.id == pad.id, orElse: () => pad);
+    // final currentPad = currentPads.firstWhere((p) => p.id == pad.id, orElse: () => pad);
+    final currentPad = currentPads.any((p) => p.id == pad.id) 
+        ? currentPads.firstWhere((p) => p.id == pad.id) 
+        : pad;
 
 
     return Scaffold(
@@ -197,12 +201,19 @@ class PadDetailsScreen extends ConsumerWidget {
                       offset: const Offset(0, 2),
                     ),
                   ],
-                image: DecorationImage(
-                  image: AssetImage(currentPad.hasPhoto ? 'assets/img/shoe1.png' :
-                   'assets/img/shoe1.png'),
-                  fit: BoxFit.cover,
-                ),
+                // image: DecorationImage(
+                //   image: AssetImage(currentPad.hasPhoto ? 'assets/img/shoe1.png' :
+                //    'assets/img/shoe1.png'),
+                //   fit: BoxFit.cover,
+                // ),
               ),
+              child: currentPad.imagePath != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(File(currentPad.imagePath!), fit: BoxFit.cover),
+                    )
+                  : const Center(child: Icon(Icons.camera_alt, size: 42, color: Color(0xFF70635D))),
+
             ),
             const SizedBox(height: 16),
 
@@ -231,10 +242,30 @@ class PadDetailsScreen extends ConsumerWidget {
             _buildCard(
               title: 'Key Measurements',
               children: [
-                _buildMeasurementRow('Ball Girth', '240 mm', 'Circumference at widest part of forefoot'),
-                _buildMeasurementRow('Instep Girth', '255 mm', 'Circumference over instep'),
-                _buildMeasurementRow('Lenght', '280 mm', 'Total length heel to toe'),
-                _buildMeasurementRow('Heel Height', '280 mm', 'Height of heel from ground'),
+                // _buildMeasurementRow('Ball Girth', '240 mm', 'Circumference at widest part of forefoot'),
+                // _buildMeasurementRow('Instep Girth', '255 mm', 'Circumference over instep'),
+                // _buildMeasurementRow('Lenght', '280 mm', 'Total length heel to toe'),
+                // _buildMeasurementRow('Heel Height', '280 mm', 'Height of heel from ground'),
+                _buildMeasurementRow(
+                  'Ball Girth', 
+                  currentPad.ballGirth.isEmpty ? 'N/A' : '${currentPad.ballGirth} mm', 
+                  'Circumference at widest part of forefoot'
+                ),
+                _buildMeasurementRow(
+                  'Instep Girth', 
+                  currentPad.instepGirth.isEmpty ? 'N/A' : '${currentPad.instepGirth} mm', 
+                  'Circumference over instep'
+                ),
+                _buildMeasurementRow(
+                  'Length', 
+                  currentPad.measure, 
+                  'Total length heel to toe'
+                ),
+                _buildMeasurementRow(
+                  'Heel Height', 
+                  currentPad.heelHeight.isEmpty ? 'N/A' : '${currentPad.heelHeight} mm', 
+                  'Height of heel from ground'
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -243,8 +274,9 @@ class PadDetailsScreen extends ConsumerWidget {
             _buildCard(
               title: 'Notes',
               children: [
-                const Text(
-                  'Excellent for boots, high instep accommodation. Perfect for ankle boots and work boot styles.',
+                Text(
+                  // 'Excellent for boots, high instep accommodation. Perfect for ankle boots and work boot styles.',
+                  currentPad.notes.isEmpty ? 'No additional notes provided.' : currentPad.notes,
                   style: TextStyle(fontSize: 14, color: Color(0xFF70635D), height: 1.5),
                 ),
               ],
@@ -290,8 +322,9 @@ class PadDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildDetailItem(String label, String value) {
-    return Flexible(
-      child: Column(
+    // return Flexible(
+        return Column(
+      // child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -304,8 +337,8 @@ class PadDetailsScreen extends ConsumerWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black, fontFamily: 'SF Pro Display'),
           ),
         ],
-      ),
-    );
+      );
+    // );
   }
 
   Widget _buildMeasurementRow(String label, String value, String subtext) {
